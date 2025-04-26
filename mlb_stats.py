@@ -88,6 +88,8 @@ def get_today_games():
             "home_pitcher": home_pitcher,
             "away_pitcher": away_pitcher,
             "home_stats": home_stats,
-            "away_stats": away_stats
+            "away_stats": away_stats,
+            "gameDate": game.get("gameDate")  # 👈 Add this!
         })
     return games
+
