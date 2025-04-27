@@ -1,14 +1,12 @@
-# recommender.py
-
-MAX_SCORE = 70  # Max possible score to normalize percentage
+MAX_SCORE = 70 
 
 def classify_confidence(score):
-    if score >= 55:
-        return "🔥 High Confidence"
-    elif score >= 30:
-        return "👍 Medium Confidence"
+    if score >= 60:
+        return "High Confidence"
+    elif score >= 40:
+        return "Medium Confidence"
     else:
-        return "🤔 Low Confidence"
+        return "Low Confidence"
 
 def generate_recommendations(games, odds_data):
     recommendations = []
