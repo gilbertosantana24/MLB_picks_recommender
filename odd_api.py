@@ -7,7 +7,7 @@ def get_mlb_odds():
     params = {
         "apiKey": ODDS_API_KEY,
         "regions": "us",
-        "markets": "h2h",
+        "markets": "h2h,totals",
         "oddsFormat": "american"
     }
     res = requests.get(url, params=params)
@@ -27,15 +27,22 @@ def get_mlb_odds():
     for game in data:
         if not game.get("bookmakers"):
             continue
-        if not game["bookmakers"][0].get("markets"):
-            continue
 
         home = game["home_team"]
         away = game["away_team"]
-        ml = {}
-        for outcome in game["bookmakers"][0]["markets"][0]["outcomes"]:
-            ml[outcome["name"]] = outcome["price"]
+        matchup = f"{away} vs {home}"
+        market_data = {
+            "moneyline": {},
+            "total": None
+        }
 
-        odds[f"{away} vs {home}"] = ml
+        for market in game["bookmakers"][0].get("markets", []):
+            if market["key"] == "h2h":
+                for outcome in market["outcomes"]:
+                    market_data["moneyline"][outcome["name"]] = outcome["price"]
+            if market["key"] == "totals":
+                market_data["total"] = market["outcomes"][0]["point"]
+
+        odds[matchup] = market_data
 
     return odds
