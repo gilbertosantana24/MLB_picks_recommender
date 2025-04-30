@@ -1,4 +1,6 @@
 from consensus_scraper import get_public_betting_consensus
+from bullpen_scraper import get_team_bullpen_era
+from batting_scraper import get_team_k_bb_rates
 
 MAX_SCORE = 85
 
@@ -13,6 +15,8 @@ def classify_confidence(score):
 def generate_recommendations(games, odds_data):
     recommendations = []
     consensus_data = get_public_betting_consensus()
+    bullpen_eras = get_team_bullpen_era()
+    team_kbb = get_team_k_bb_rates()
 
     for game in games:
         home = game["home_team"]
@@ -23,46 +27,57 @@ def generate_recommendations(games, odds_data):
         reasons = []
 
         moneyline = odds.get("moneyline", {})
-        total_line = odds.get("total")
+
+        home_pitcher = game["home_pitcher"]
+        away_pitcher = game["away_pitcher"]
+
+        home_recent = home_pitcher.get("recent")
+        away_recent = away_pitcher.get("recent")
+
+        def compare_stat(stat, better_low=True):
+            h_val = home_recent.get(stat) if home_recent else None
+            a_val = away_recent.get(stat) if away_recent else None
+            if h_val is not None and a_val is not None:
+                if (h_val < a_val and better_low) or (h_val > a_val and not better_low):
+                    return "home"
+                else:
+                    return "away"
+            return None
 
         try:
-            if game["home_pitcher"]["era"] and game["away_pitcher"]["era"]:
-                if float(game["home_pitcher"]["era"]) < float(game["away_pitcher"]["era"]):
-                    score += 10
-                    reasons.append("Better home pitcher ERA")
-                else:
-                    score += 5
-                    reasons.append("Better away pitcher ERA")
+            if compare_stat("era", better_low=True) == "home":
+                score += 10
+                reasons.append("Better home pitcher ERA (recent)")
+            elif compare_stat("era", better_low=True) == "away":
+                score += 5
+                reasons.append("Better away pitcher ERA (recent)")
         except: pass
 
         try:
-            if game["home_pitcher"]["whip"] and game["away_pitcher"]["whip"]:
-                if float(game["home_pitcher"]["whip"]) < float(game["away_pitcher"]["whip"]):
-                    score += 10
-                    reasons.append("Better home pitcher WHIP")
-                else:
-                    score += 5
-                    reasons.append("Better away pitcher WHIP")
+            if compare_stat("whip", better_low=True) == "home":
+                score += 10
+                reasons.append("Better home pitcher WHIP (recent)")
+            elif compare_stat("whip", better_low=True) == "away":
+                score += 5
+                reasons.append("Better away pitcher WHIP (recent)")
         except: pass
 
         try:
-            if game["home_pitcher"].get("k9") and game["away_pitcher"].get("k9"):
-                if float(game["home_pitcher"]["k9"]) > float(game["away_pitcher"]["k9"]):
-                    score += 5
-                    reasons.append("Higher strikeouts/9 (home pitcher)")
-                else:
-                    score += 3
-                    reasons.append("Higher strikeouts/9 (away pitcher)")
+            if compare_stat("k9", better_low=False) == "home":
+                score += 5
+                reasons.append("Higher strikeouts/9 (home pitcher, recent)")
+            elif compare_stat("k9", better_low=False) == "away":
+                score += 3
+                reasons.append("Higher strikeouts/9 (away pitcher, recent)")
         except: pass
 
         try:
-            if game["home_pitcher"].get("bb9") and game["away_pitcher"].get("bb9"):
-                if float(game["home_pitcher"]["bb9"]) < float(game["away_pitcher"]["bb9"]):
-                    score += 5
-                    reasons.append("Lower walks/9 (home pitcher)")
-                else:
-                    score += 3
-                    reasons.append("Lower walks/9 (away pitcher)")
+            if compare_stat("bb9", better_low=True) == "home":
+                score += 5
+                reasons.append("Lower walks/9 (home pitcher, recent)")
+            elif compare_stat("bb9", better_low=True) == "away":
+                score += 3
+                reasons.append("Lower walks/9 (away pitcher, recent)")
         except: pass
 
         try:
@@ -98,7 +113,6 @@ def generate_recommendations(games, odds_data):
             score += 5
             reasons.append("Away is moneyline favorite")
 
-        # Add public consensus logic
         consensus = consensus_data.get(f"{away} vs {home}")
         if consensus:
             bets = consensus["bets"]
@@ -110,25 +124,34 @@ def generate_recommendations(games, odds_data):
                 score -= 3
                 reasons.append("Public heavily on this side")
 
+        bullpen_home = bullpen_eras.get(home)
+        bullpen_away = bullpen_eras.get(away)
+        if bullpen_home and bullpen_away:
+            if bullpen_home < bullpen_away:
+                score += 3
+                reasons.append("Stronger bullpen (home)")
+            else:
+                score += 1
+                reasons.append("Stronger bullpen (away)")
+
+        opponent_kbb = team_kbb.get(away)
+        if opponent_kbb and home_recent:
+            if opponent_kbb["k_pct"] > 24 and home_recent["k9"] > 9:
+                score += 3
+                reasons.append("High K% opponent favors home pitcher")
+            if opponent_kbb["bb_pct"] > 10 and home_recent["bb9"] > 3.5:
+                score -= 2
+                reasons.append("High BB% opponent vs wild home pitcher")
+
         winner_pick = home if score >= 40 else away
         winner_confidence = classify_confidence(score)
         winner_confidence_percentage = round((score * 100) / MAX_SCORE)
-
-        ou_pick = None
-        if total_line is not None:
-            if game.get("home_score") and game.get("away_score"):
-                total_runs = game["home_score"] + game["away_score"]
-                ou_pick = "Over" if total_runs > total_line else "Under"
-            else:
-                ou_pick = "Over" if score < 35 else "Under"
 
         recommendations.append({
             "matchup": matchup,
             "winner_pick": winner_pick,
             "winner_confidence": winner_confidence,
             "winner_confidence_percentage": winner_confidence_percentage,
-            "over_under_pick": ou_pick,
-            "total_line": total_line,
             "reasons": reasons
         })
 

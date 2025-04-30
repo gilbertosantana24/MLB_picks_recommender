@@ -32,6 +32,36 @@ def get_games_by_date(date):
 
     return games
 
+def get_recent_pitcher_stats(pitcher_id, num_games=3):
+    url = f"https://statsapi.mlb.com/api/v1/people/{pitcher_id}/stats?stats=gameLog&group=pitching&season=2024"
+    res = requests.get(url)
+    logs = res.json().get("stats", [])[0].get("splits", [])
+
+    recent_logs = logs[:num_games]
+    if not recent_logs:
+        return None
+
+    innings = 0
+    earned_runs = 0
+    walks = 0
+    strikeouts = 0
+    hits = 0
+
+    for game in recent_logs:
+        stat = game["stat"]
+        innings += float(stat.get("inningsPitched", 0))
+        earned_runs += stat.get("earnedRuns", 0)
+        walks += stat.get("baseOnBalls", 0)
+        strikeouts += stat.get("strikeOuts", 0)
+        hits += stat.get("hits", 0)
+
+    era = (earned_runs * 9 / innings) if innings else None
+    whip = ((walks + hits) / innings) if innings else None
+    k9 = (strikeouts * 9 / innings) if innings else None
+    bb9 = (walks * 9 / innings) if innings else None
+
+    return {"era": era, "whip": whip, "k9": k9, "bb9": bb9}
+
 def extract_pitcher_stats(pitcher):
     stats = pitcher.get("stats", [])
     if not stats:
@@ -42,7 +72,8 @@ def extract_pitcher_stats(pitcher):
         "era": pitching_stats.get("era"),
         "whip": pitching_stats.get("whip"),
         "k9": pitching_stats.get("strikeoutsPer9Inn"),
-        "bb9": pitching_stats.get("baseOnBallsPer9Inn")
+        "bb9": pitching_stats.get("baseOnBallsPer9Inn"),
+        "recent": get_recent_pitcher_stats(pitcher.get("id"))
     }
 
 def extract_team_stats(team):

@@ -6,7 +6,7 @@ from mlb_stats import get_games_by_date
 from odd_api import get_mlb_odds
 from recommend_pick import generate_recommendations
 
-st.set_page_config(page_title="MLB Picks Recommender", page_icon="⚾", layout="wide")
+st.set_page_config(page_title="Slider picks", page_icon="⚾", layout="wide")
 
 st.title("⚾ MLB Picks Recommender ⚾")
 st.caption("MLB picks based on pitcher stats, team performance, and betting odds.")
@@ -22,7 +22,7 @@ def prepare_picks(games, picks):
         picks_data.append({
             "Matchup": rec['matchup'].replace(" vs ", "\nvs\n"),
             "Recommended Winner Pick": rec['winner_pick'],
-            "Over/Under Pick": f"{rec['over_under_pick']} {rec['total_line']}" if rec['over_under_pick'] else "N/A"
+            #"Over/Under Pick": f"{rec['over_under_pick']} {rec['total_line']}" if rec['over_under_pick'] else "N/A"
         })
 
     df = pd.DataFrame(picks_data)
