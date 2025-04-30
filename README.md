@@ -1,45 +1,56 @@
 # ⚾ MLB Picks Recommender
 
-This project builds an intelligent recommendation system for MLB games based on real data — including pitcher stats, team performance, and betting odds.
-
-It automatically analyzes each matchup and suggests the team most likely to win, along with a confidence percentage.
+This app recommends MLB game picks using real-time statistics and betting odds.
 
 ---
 
 ## 📈 Features
 
-- ✅ Real pitcher ERA and WHIP from the MLB Stats API
-- ✅ Real team record from the last 10 games
-- ✅ Offensive stats (OPS) for better team performance comparison
-- ✅ Current moneyline odds from The Odds API
-- ✅ Score-based confidence percentage
-- ✅ Auto-sorted picks (highest confidence first)
-- ✅ Clear recommendation reasons
+- ✅ Pulls pitcher stats (ERA, WHIP, K/9, BB/9) from MLB Stats API  
+- ✅ Pulls team stats (OPS, Win%) from MLB Stats API  
+- ✅ Integrates betting odds (moneyline, totals) from The Odds API  
+- ✅ Includes public betting consensus data (% bets, % money) from Action Network  
+- ✅ Scores matchups and picks winners based on a custom rule-based algorithm  
+- ✅ Suggests Over/Under picks based on prediction score and total line  
+- ✅ Simple, clean frontend: only shows matchup, winner pick, and OU pick  
 
 ---
 
-## 🚀 How to Run
+## 🖥️ UI Output Example
 
-1. **Clone this repository**
+| Matchup                  | Recommended Winner Pick | Over/Under Pick |
+|--------------------------|--------------------------|------------------|
+| Yankees vs Red Sox       | Yankees                  | Under 8.5        |
+| Dodgers vs Padres        | Dodgers                  | Over 9.0         |
 
-bash
-git clone https://github.com/gilbertosantana24/MLB_picks_recommender.git
+*Confidence and reasons are used internally to determine picks but are not displayed.*
+
+---
+
+mlb_picks_recommender/
+├── app.py                 # 📊 Streamlit frontend
+├── mlb_stats.py           # 🧠 Pulls MLB team and pitcher stats
+├── odd_api.py             # 💰 Pulls moneyline and totals odds
+├── recommend_pick.py      # 🧮 Calculates picks and scores
+├── consensus_scraper.py   # 🧠 Gets % bets and % money from Action Network
+├── run.py                 # 🖥️ Optional CLI runner
+└── README.md
+
+Consensus data is scraped from Action Network — structure may break over time.
+
+This is a deterministic rule-based model (not ML-based, but extendable).
+
+Use for entertainment and analysis. Bet responsibly.
+
+## 🚀 How to Run Locally
+
+```bash
+# Clone the repo
+git clone https://github.com/your-username/MLB_picks_recommender.git
 cd MLB_picks_recommender
 
-install dependencies:
-pip install requests
-python run.py
+# Install dependencies
+pip install -r requirements.txt
 
-/mlb_recommender/
-├── mlb_stats.py       # 📊 Pulls MLB pitchers and team stats
-├── odds_api.py        # 💰 Pulls current betting odds
-├── recommender.py     # 🧠 Calculates picks and confidence
-└── run.py             # 🚀 Main runner script
-
-🧢 Chicago Cubs (away) vs New York Yankees (home)
-✅ Recommended Pick: New York Yankees
-📊 92% confidence
-🔰 Confidence Level: 🔥 High Confidence
-🧠 Reasons: Better home pitcher ERA, Better home pitcher WHIP, Better last 10 games record (home) [7/10], Better OPS (home), Favorite in moneyline (home)
---------------------------------------------------
-
+# Run the app
+streamlit run app.py
