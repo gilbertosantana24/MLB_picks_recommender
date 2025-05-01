@@ -1,0 +1,60 @@
+{
+  "date": "2025-04-30",
+  "results": [
+    {
+      "matchup": "Minnesota Twins (away) vs Cleveland Guardians (home)",
+      "picked": "Minnesota Twins",
+      "actual": null
+    },
+    {
+      "matchup": "Washington Nationals (away) vs Philadelphia Phillies (home)",
+      "picked": "Washington Nationals",
+      "actual": null
+    },
+    {
+      "matchup": "Boston Red Sox (away) vs Toronto Blue Jays (home)",
+      "picked": "Boston Red Sox",
+      "actual": null
+    },
+    {
+      "matchup": "Colorado Rockies (away) vs San Francisco Giants (home)",
+      "picked": "Colorado Rockies",
+      "actual": null
+    },
+    {
+      "matchup": "Detroit Tigers (away) vs Los Angeles Angels (home)",
+      "picked": "Detroit Tigers",
+      "actual": null
+    },
+    {
+      "matchup": "Chicago Cubs (away) vs Pittsburgh Pirates (home)",
+      "picked": "Chicago Cubs",
+      "actual": null
+    },
+    {
+      "matchup": "St. Louis Cardinals (away) vs Cincinnati Reds (home)",
+      "picked": "St. Louis Cardinals",
+      "actual": null
+    },
+    {
+      "matchup": "Arizona Diamondbacks (away) vs New York Mets (home)",
+      "picked": "Arizona Diamondbacks",
+      "actual": null
+    },
+    {
+      "matchup": "Kansas City Royals (away) vs Tampa Bay Rays (home)",
+      "picked": "Kansas City Royals",
+      "actual": null
+    },
+    {
+      "matchup": "Milwaukee Brewers (away) vs Chicago White Sox (home)",
+      "picked": "Milwaukee Brewers",
+      "actual": null
+    },
+    {
+      "matchup": "Athletics (away) vs Texas Rangers (home)",
+      "picked": "Athletics",
+      "actual": null
+    }
+  ]
+}
