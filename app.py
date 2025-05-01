@@ -1,76 +1,84 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
-from mlb_stats import get_games_by_date
-from odd_api import get_mlb_odds
-from recommend_pick import generate_recommendations
+import json
+import os
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Slider picks", page_icon="⚾", layout="wide")
-
 st.title("⚾ MLB Picks Recommender ⚾")
-st.caption("MLB picks based on pitcher stats, team performance, and betting odds.")
+st.caption("Picks generated automatically every day at 12:01 AM.")
 st.markdown("---")
 
-def get_date_string(days_to_add=0):
-    target_date = datetime.now(pytz.timezone('America/Los_Angeles')) + timedelta(days=days_to_add)
-    return target_date.strftime("%Y-%m-%d"), target_date.strftime("%B %d, %Y")
-
-def prepare_picks(games, picks):
+def prepare_picks(picks):
     picks_data = []
-    for rec, game in zip(picks, games):
+    for rec in picks:
         picks_data.append({
             "Matchup": rec['matchup'].replace(" vs ", "\nvs\n"),
             "Recommended Winner Pick": rec['winner_pick'],
-            #"Over/Under Pick": f"{rec['over_under_pick']} {rec['total_line']}" if rec['over_under_pick'] else "N/A"
         })
-
     df = pd.DataFrame(picks_data)
     df.index = range(1, len(df) + 1)
     return df
 
-if "picks_fetched" not in st.session_state:
-    st.session_state.picks_fetched = False
+def get_date_strings():
+    now = datetime.now(pytz.timezone('America/Los_Angeles'))
+    return now.strftime("%Y-%m-%d"), now.strftime("%B %d, %Y")
 
-if st.button("→ Click here to get picks") or st.session_state.picks_fetched:
-    if not st.session_state.picks_fetched:
-        with st.spinner('Fetching games and generating picks...'):
-            today_str, today_pretty = get_date_string(0)
-            tomorrow_str, tomorrow_pretty = get_date_string(1)
+def get_monthly_performance():
+    correct = 0
+    total = 0
+    month = datetime.now().strftime("%Y-%m")
+    folder = "results"
+    if not os.path.exists(folder):
+        return 0, 0
 
-            st.session_state.today_str = today_str
-            st.session_state.tomorrow_str = tomorrow_str
-            st.session_state.today_pretty = today_pretty
-            st.session_state.tomorrow_pretty = tomorrow_pretty
+    for file in os.listdir(folder):
+        if file.endswith(".json") and file.startswith(month):
+            with open(os.path.join(folder, file)) as f:
+                data = json.load(f)
+                for game in data["results"]:
+                    if game.get("picked") and game.get("actual"):
+                        total += 1
+                        if game["picked"] == game["actual"]:
+                            correct += 1
+    return correct, total
 
-            st.session_state.games_today = get_games_by_date(today_str)
-            st.session_state.games_tomorrow = get_games_by_date(tomorrow_str)
+def display_pie_chart(correct, total):
+    wrong = total - correct
+    labels = ["✅ Correct", "❌ Wrong"]
+    sizes = [correct, wrong]
+    colors = ["#4CAF50", "#F44336"]
 
-            st.session_state.odds_today = get_mlb_odds()
-            st.session_state.odds_tomorrow = get_mlb_odds()
+    fig, ax = plt.subplots()
+    ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90, colors=colors)
+    ax.axis("equal")
+    st.pyplot(fig)
 
-            st.session_state.picks_today = generate_recommendations(st.session_state.games_today, st.session_state.odds_today)
-            st.session_state.picks_tomorrow = generate_recommendations(st.session_state.games_tomorrow, st.session_state.odds_tomorrow)
+# === Load today's picks ===
+today_str, today_pretty = get_date_strings()
+picks_file = "picks_today.json"
 
-            st.session_state.picks_fetched = True
+if os.path.exists(picks_file):
+    with open(picks_file, "r") as f:
+        picks = json.load(f)
 
-    st.success("✅ Picks generated!")
-
-    st.subheader(f"📅 Today's Games ({st.session_state.today_pretty})")
-    df_today = prepare_picks(st.session_state.games_today, st.session_state.picks_today)
-
+    st.subheader(f"📅 Today's Picks ({today_pretty})")
+    df_today = prepare_picks(picks)
     if not df_today.empty:
         st.dataframe(df_today, use_container_width=True)
     else:
-        st.info("No picks available for today's games.")
-
-    st.subheader(f"📅 Tomorrow's Games ({st.session_state.tomorrow_pretty})")
-    df_tomorrow = prepare_picks(st.session_state.games_tomorrow, st.session_state.picks_tomorrow)
-
-    if not df_tomorrow.empty:
-        st.dataframe(df_tomorrow, use_container_width=True)
-    else:
-        st.info("No picks available for tomorrow's games.")
-
+        st.info("No picks available.")
 else:
-    st.info("Press the button above to fetch today's and tomorrow's picks.")
+    st.warning("Picks have not been generated yet. Please run the daily fetch script.")
+
+# === Show Monthly Accuracy ===
+st.markdown("---")
+st.markdown("### 📊 Monthly Pick Accuracy")
+correct, total = get_monthly_performance()
+st.write(f"🎯 {correct} right picks / {total} total games")
+if total > 0:
+    display_pie_chart(correct, total)
+else:
+    st.info("No pick results available yet for this month.")
