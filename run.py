@@ -6,19 +6,19 @@ from recommend_pick import generate_recommendations
 
 def main():
     today_str = datetime.now().strftime("%Y-%m-%d")
-    print(f"Fetching MLB games for {today_str}...")
+    print(f"📅 Fetching MLB games for {today_str}...")
 
     games = get_games_by_date(today_str)
     odds = get_mlb_odds()
-    recs = generate_recommendations(games, odds)
+    recommendations = generate_recommendations(games, odds)
 
     with open("games_today.json", "w") as f:
-        json.dump(games, f)
+        json.dump(games, f, indent=2)
 
     with open("picks_today.json", "w") as f:
-        json.dump(recs, f)
+        json.dump(recommendations, f, indent=2)
 
-    print(f"Picks saved for {today_str}")
+    print(f"✅ Picks saved to picks_today.json for {today_str}")
 
 if __name__ == "__main__":
     main()
