@@ -1,27 +1,27 @@
 [
   {
-    "matchup": "Washington Nationals (away) vs Cincinnati Reds (home)",
-    "winner_pick": "Cincinnati Reds"
-  },
-  {
-    "matchup": "San Diego Padres (away) vs Pittsburgh Pirates (home)",
-    "winner_pick": "San Diego Padres"
-  },
-  {
-    "matchup": "Arizona Diamondbacks (away) vs Philadelphia Phillies (home)",
-    "winner_pick": "Philadelphia Phillies"
-  },
-  {
-    "matchup": "Kansas City Royals (away) vs Baltimore Orioles (home)",
-    "winner_pick": "Baltimore Orioles"
-  },
-  {
     "matchup": "Tampa Bay Rays (away) vs New York Yankees (home)",
     "winner_pick": "New York Yankees"
   },
   {
+    "matchup": "Houston Astros (away) vs Chicago White Sox (home)",
+    "winner_pick": "Houston Astros"
+  },
+  {
+    "matchup": "New York Mets (away) vs St. Louis Cardinals (home)",
+    "winner_pick": "New York Mets"
+  },
+  {
     "matchup": "Cleveland Guardians (away) vs Toronto Blue Jays (home)",
     "winner_pick": "Toronto Blue Jays"
+  },
+  {
+    "matchup": "San Diego Padres (away) vs Pittsburgh Pirates (home)",
+    "winner_pick": "Pittsburgh Pirates"
+  },
+  {
+    "matchup": "Colorado Rockies (away) vs San Francisco Giants (home)",
+    "winner_pick": "San Francisco Giants"
   },
   {
     "matchup": "Minnesota Twins (away) vs Boston Red Sox (home)",
@@ -32,12 +32,12 @@
     "winner_pick": "Miami Marlins"
   },
   {
-    "matchup": "Los Angeles Dodgers (away) vs Atlanta Braves (home)",
-    "winner_pick": "Los Angeles Dodgers"
+    "matchup": "Arizona Diamondbacks (away) vs Philadelphia Phillies (home)",
+    "winner_pick": "Philadelphia Phillies"
   },
   {
-    "matchup": "Houston Astros (away) vs Chicago White Sox (home)",
-    "winner_pick": "Houston Astros"
+    "matchup": "Washington Nationals (away) vs Cincinnati Reds (home)",
+    "winner_pick": "Cincinnati Reds"
   },
   {
     "matchup": "Seattle Mariners (away) vs Texas Rangers (home)",
@@ -48,15 +48,15 @@
     "winner_pick": "Milwaukee Brewers"
   },
   {
-    "matchup": "New York Mets (away) vs St. Louis Cardinals (home)",
-    "winner_pick": "New York Mets"
+    "matchup": "Kansas City Royals (away) vs Baltimore Orioles (home)",
+    "winner_pick": "Baltimore Orioles"
+  },
+  {
+    "matchup": "Los Angeles Dodgers (away) vs Atlanta Braves (home)",
+    "winner_pick": "Atlanta Braves"
   },
   {
     "matchup": "Detroit Tigers (away) vs Los Angeles Angels (home)",
     "winner_pick": "Detroit Tigers"
-  },
-  {
-    "matchup": "Colorado Rockies (away) vs San Francisco Giants (home)",
-    "winner_pick": "San Francisco Giants"
   }
 ]
