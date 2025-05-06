@@ -38,7 +38,6 @@ scipy==1.15.2
 six==1.17.0
 smmap==5.0.2
 soupsieve==2.7
-streamlit==1.44.1
 tenacity==9.1.2
 threadpoolctl==3.6.0
 toml==0.10.2
@@ -46,8 +45,7 @@ tornado==6.4.2
 typing_extensions==4.13.2
 tzdata==2025.2
 urllib3==2.4.0
-streamlit
-beautifulsoup4
 requests
 pandas
 matplotlib
+beautifulsoup4

@@ -1,7 +1,7 @@
 import requests
 
 def get_games_by_date(date):
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date}&hydrate=probablePitcher(stats(type=season,group=pitching)),team(stats,type=season)"
+    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date}&hydrate=probablePitcher(stats(type=season,group=pitching)),team(stats,type=season),venue"
     res = requests.get(url)
     data = res.json()
 
@@ -20,6 +20,8 @@ def get_games_by_date(date):
             home_team_stats = extract_team_stats(home)
             away_team_stats = extract_team_stats(away)
 
+            venue_name = game.get("venue", {}).get("name")
+
             games.append({
                 "home_team": home["team"]["name"],
                 "away_team": away["team"]["name"],
@@ -27,7 +29,8 @@ def get_games_by_date(date):
                 "away_pitcher": away_pitcher_stats,
                 "home_stats": home_team_stats,
                 "away_stats": away_team_stats,
-                "gameDate": game.get("gameDate")
+                "gameDate": game.get("gameDate"),
+                "venue": venue_name
             })
 
     return games
