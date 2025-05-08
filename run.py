@@ -13,11 +13,9 @@ def main():
         picks = generate_recommendations(games, odds)
 
         print("🎯 MLB Picks for Today:\n")
-        for rec in picks:
-            print(f"🧢 {rec['matchup']}")
-            print("----------------")
+        for rec in picks: 
             print(f"✅ Pick: {rec['winner_pick']}")
-            print("/" * 40)
+            print("-" * 40)
 
     except Exception as e:
         print(f"❌ Error fetching picks: {e}")
