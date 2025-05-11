@@ -49,3 +49,4 @@ requests
 pandas
 matplotlib
 beautifulsoup4
+requests

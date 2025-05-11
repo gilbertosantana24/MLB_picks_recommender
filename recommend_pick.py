@@ -4,70 +4,44 @@ from weather_fetcher import get_weather
 import random
 
 PARK_FACTORS = {
-    "Angel Stadium": 1.02,
-    "Busch Stadium": 0.95,
-    "Chase Field": 1.04,
-    "Citizens Bank Park": 1.06,
-    "Citi Field": 0.97,
-    "Comerica Park": 0.98,
-    "Coors Field": 1.35,
-    "Dodger Stadium": 1.00,
-    "Fenway Park": 1.08,
-    "Globe Life Field": 1.01,
-    "Great American Ball Park": 1.12,
-    "Guaranteed Rate Field": 1.04,
-    "Kauffman Stadium": 0.96,
-    "loanDepot park": 0.94,
-    "Minute Maid Park": 1.01,
-    "Nationals Park": 1.01,
-    "Oakland Coliseum": 0.92,
-    "Oracle Park": 0.90,
-    "Petco Park": 0.85,
-    "PNC Park": 0.98,
-    "Progressive Field": 1.00,
-    "Rogers Centre": 1.09,
-    "T-Mobile Park": 0.94,
-    "Target Field": 0.99,
-    "Tropicana Field": 0.93,
-    "Truist Park": 1.05,
-    "Wrigley Field": 1.07,
-    "Yankee Stadium": 1.12,
-    "American Family Field": 1.03,
-    "Oriole Park at Camden Yards": 1.00
+    "Angel Stadium": 1.02, "Busch Stadium": 0.95, "Chase Field": 1.04, "Citizens Bank Park": 1.06, "Citi Field": 0.97,
+    "Comerica Park": 0.98, "Coors Field": 1.35, "Dodger Stadium": 1.00, "Fenway Park": 1.08, "Globe Life Field": 1.01,
+    "Great American Ball Park": 1.12, "Guaranteed Rate Field": 1.04, "Kauffman Stadium": 0.96, "loanDepot park": 0.94,
+    "Minute Maid Park": 1.01, "Nationals Park": 1.01, "Oakland Coliseum": 0.92, "Oracle Park": 0.90, "Petco Park": 0.85,
+    "PNC Park": 0.98, "Progressive Field": 1.00, "Rogers Centre": 1.09, "T-Mobile Park": 0.94, "Target Field": 0.99,
+    "Tropicana Field": 0.93, "Truist Park": 1.05, "Wrigley Field": 1.07, "Yankee Stadium": 1.12,
+    "American Family Field": 1.03, "Oriole Park at Camden Yards": 1.00
 }
 
 BALLPARK_CITIES = {
-    "Angel Stadium": "Anaheim",
-    "Busch Stadium": "St. Louis",
-    "Chase Field": "Phoenix",
-    "Citizens Bank Park": "Philadelphia",
-    "Citi Field": "New York",
-    "Comerica Park": "Detroit",
-    "Coors Field": "Denver",
-    "Dodger Stadium": "Los Angeles",
-    "Fenway Park": "Boston",
-    "Globe Life Field": "Arlington",
-    "Great American Ball Park": "Cincinnati",
-    "Guaranteed Rate Field": "Chicago",
-    "Kauffman Stadium": "Kansas City",
-    "loanDepot park": "Miami",
-    "Minute Maid Park": "Houston",
-    "Nationals Park": "Washington",
-    "Oakland Coliseum": "Oakland",
-    "Oracle Park": "San Francisco",
-    "Petco Park": "San Diego",
-    "PNC Park": "Pittsburgh",
-    "Progressive Field": "Cleveland",
-    "Rogers Centre": "Toronto",
-    "T-Mobile Park": "Seattle",
-    "Target Field": "Minneapolis",
-    "Tropicana Field": "St. Petersburg",
-    "Truist Park": "Atlanta",
-    "Wrigley Field": "Chicago",
-    "Yankee Stadium": "New York",
-    "American Family Field": "Milwaukee",
-    "Oriole Park at Camden Yards": "Baltimore"
+    "Angel Stadium": "Anaheim", "Busch Stadium": "St. Louis", "Chase Field": "Phoenix", "Citizens Bank Park": "Philadelphia",
+    "Citi Field": "New York", "Comerica Park": "Detroit", "Coors Field": "Denver", "Dodger Stadium": "Los Angeles",
+    "Fenway Park": "Boston", "Globe Life Field": "Arlington", "Great American Ball Park": "Cincinnati",
+    "Guaranteed Rate Field": "Chicago", "Kauffman Stadium": "Kansas City", "loanDepot park": "Miami",
+    "Minute Maid Park": "Houston", "Nationals Park": "Washington", "Oakland Coliseum": "Oakland",
+    "Oracle Park": "San Francisco", "Petco Park": "San Diego", "PNC Park": "Pittsburgh", "Progressive Field": "Cleveland",
+    "Rogers Centre": "Toronto", "T-Mobile Park": "Seattle", "Target Field": "Minneapolis",
+    "Tropicana Field": "St. Petersburg", "Truist Park": "Atlanta", "Wrigley Field": "Chicago",
+    "Yankee Stadium": "New York", "American Family Field": "Milwaukee", "Oriole Park at Camden Yards": "Baltimore"
 }
+
+WEIGHTS = {
+    "pitching": 1.5,
+    "ops": 1.2,
+    "bullpen": 1.0,
+    "win_pct": 1.0,
+    "park_factor": 0.5,
+    "weather": 0.5,
+    "betting_sharp": 1.0,
+    "betting_fade": 0.5,
+    "odds": 1.0
+}
+
+def normalize(value, min_val, max_val):
+    try:
+        return max(0.0, min(1.0, (value - min_val) / (max_val - min_val)))
+    except:
+        return 0.0
 
 def generate_recommendations(games, odds_data):
     recommendations = []
@@ -80,98 +54,106 @@ def generate_recommendations(games, odds_data):
         venue = game.get("venue")
         matchup = f"{away} (away) vs {home} (home)"
         odds = odds_data.get(f"{away} vs {home}", {})
+        moneyline = odds.get("moneyline", {})
+        h_odds = moneyline.get(home)
+        a_odds = moneyline.get(away)
         score_home = 0
         score_away = 0
 
-        # Pitcher Stats
         home_pitcher = game["home_pitcher"].get("recent", {})
         away_pitcher = game["away_pitcher"].get("recent", {})
-        for metric in ["era", "whip", "k9", "bb9"]:
-            if home_pitcher.get(metric) is not None and away_pitcher.get(metric) is not None:
-                if home_pitcher[metric] < away_pitcher[metric]:
-                    score_home += 1
+        for metric, min_val, max_val in [("era", 1.5, 6.0), ("whip", 0.8, 2.0), ("k9", 5.0, 13.0), ("bb9", 1.0, 5.0)]:
+            h = home_pitcher.get(metric)
+            a = away_pitcher.get(metric)
+            if h is not None and a is not None:
+                if metric == "era" and abs(h - a) < 0.2:
+                    continue
+                if metric in ["era", "whip", "bb9"]:
+                    h_val = 1 - normalize(h, min_val, max_val)
+                    a_val = 1 - normalize(a, min_val, max_val)
                 else:
-                    score_away += 1
+                    h_val = normalize(h, min_val, max_val)
+                    a_val = normalize(a, min_val, max_val)
+                delta = h_val - a_val
+                score_home += max(0, delta) * WEIGHTS["pitching"]
+                score_away += max(0, -delta) * WEIGHTS["pitching"]
 
-        # Team OPS
-        home_ops = game["home_stats"].get("ops")
-        away_ops = game["away_stats"].get("ops")
-        if home_ops and away_ops:
-            if float(home_ops) > float(away_ops):
-                score_home += 2
+        try:
+            home_ops = float(game["home_stats"].get("ops"))
+            away_ops = float(game["away_stats"].get("ops"))
+            if abs(home_ops - away_ops) >= 0.010:
+                home_val = normalize(home_ops, 0.600, 0.900)
+                away_val = normalize(away_ops, 0.600, 0.900)
+                delta = home_val - away_val
+                score_home += max(0, delta) * WEIGHTS["ops"]
+                score_away += max(0, -delta) * WEIGHTS["ops"]
             else:
-                score_away += 2
+                home_ops = away_ops = 0.0
+        except:
+            home_ops = away_ops = 0.0
 
-        # Bullpen ERA
-        home_bp = bullpen_eras.get(home)
-        away_bp = bullpen_eras.get(away)
-        if home_bp and away_bp:
-            if home_bp < away_bp:
-                score_home += 1
-            else:
-                score_away += 1
+        try:
+            home_bp = bullpen_eras.get(home)
+            away_bp = bullpen_eras.get(away)
+            home_val = 1 - normalize(home_bp, 2.5, 5.5)
+            away_val = 1 - normalize(away_bp, 2.5, 5.5)
+            delta = home_val - away_val
+            score_home += max(0, delta) * WEIGHTS["bullpen"]
+            score_away += max(0, -delta) * WEIGHTS["bullpen"]
+        except:
+            pass
 
-        # Team Win %
-        home_win_pct = game["home_stats"].get("win_pct")
-        away_win_pct = game["away_stats"].get("win_pct")
-        if home_win_pct and away_win_pct:
-            if float(home_win_pct) > float(away_win_pct):
-                score_home += 2
-            else:
-                score_away += 2
+        try:
+            home_win = float(game["home_stats"].get("win_pct"))
+            away_win = float(game["away_stats"].get("win_pct"))
+            home_val = normalize(home_win, 0.3, 0.7)
+            away_val = normalize(away_win, 0.3, 0.7)
+            delta = home_val - away_val
+            score_home += max(0, delta) * WEIGHTS["win_pct"]
+            score_away += max(0, -delta) * WEIGHTS["win_pct"]
+        except:
+            pass
 
-        # Park Factor
         park_factor = PARK_FACTORS.get(venue, 1.00)
         if park_factor > 1.1:
-            if home_ops and away_ops:
-                if float(home_ops) > float(away_ops):
-                    score_home += 0.5
-                else:
-                    score_away += 0.5
+            score_home += (home_ops > away_ops) * WEIGHTS["park_factor"]
+            score_away += (away_ops > home_ops) * WEIGHTS["park_factor"]
         elif park_factor < 0.9:
-            if home_pitcher.get("era") and away_pitcher.get("era"):
-                if home_pitcher["era"] < away_pitcher["era"]:
-                    score_home += 0.5
+            try:
+                if home_pitcher.get("era") < away_pitcher.get("era"):
+                    score_home += WEIGHTS["park_factor"]
                 else:
-                    score_away += 0.5
+                    score_away += WEIGHTS["park_factor"]
+            except:
+                pass
 
-        # Weather Effects
         weather = get_weather(BALLPARK_CITIES.get(venue, ""))
         if weather.get("wind_mph", 0) > 15:
-            score_home += 0.5
+            score_home += WEIGHTS["weather"] / 2
         elif weather.get("temp", 0) > 85:
-            if home_ops and away_ops:
-                if float(home_ops) > float(away_ops):
-                    score_home += 0.5
-                else:
-                    score_away += 0.5
+            score_home += (home_ops > away_ops) * (WEIGHTS["weather"] / 2)
+            score_away += (away_ops > home_ops) * (WEIGHTS["weather"] / 2)
 
-        # Betting Consensus
         consensus = consensus_data.get(f"{away} vs {home}")
         if consensus:
             bets = consensus.get("bets")
             money = consensus.get("money")
+
             if money > bets and money >= 60:
-                score_away += 1.5
-            elif bets >= 70 and money <= 50:
-                score_home += 1
+                score_away += WEIGHTS["betting_sharp"]
 
-        # Moneyline Odds
-        moneyline = odds.get("moneyline", {})
-        h_odds = moneyline.get(home)
-        a_odds = moneyline.get(away)
+            if bets >= 70 and money <= 50:
+                score_home += WEIGHTS["betting_fade"]
+
+            if isinstance(a_odds, (int, float)) and a_odds > 0 and money > bets and money >= 60:
+                score_away += 0.5
+
         if isinstance(h_odds, (int, float)) and h_odds < 0:
-            score_home += 1
-        elif isinstance(a_odds, (int, float)) and a_odds < 0:
-            score_away += 1
+            score_away += WEIGHTS["odds"]
 
-        # Final Pick
-        if score_home > score_away:
-            winner_pick = home
-        elif score_away > score_home:
-            winner_pick = away
-        else:
-            winner_pick = random.choice([home, away])
+        if abs(score_home - score_away) < 0.25:
+            continue
+        winner_pick = home if score_home > score_away else away
 
         recommendations.append({
             "matchup": matchup,
